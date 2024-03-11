@@ -5,9 +5,12 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import com.example.aviatickets.R
 import com.example.aviatickets.adapter.OfferListAdapter
 import com.example.aviatickets.databinding.FragmentOfferListBinding
+import com.example.aviatickets.model.entity.Offer
+import com.example.aviatickets.model.network.ApiClient
 import com.example.aviatickets.model.service.FakeService
 
 
@@ -37,7 +40,28 @@ class OfferListFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         setupUI()
-        adapter.setItems(FakeService.offerList)
+        fetchOffers()
+//        adapter.setItems(FakeService.offerList)
+    }
+
+    private fun fetchOffers() {
+        ApiClient.getOfferService().getOfferList().enqueue(object : retrofit2.Callback<List<Offer>> {
+            override fun onResponse(call: retrofit2.Call<List<Offer>>, response: retrofit2.Response<List<Offer>>) {
+                if (response.isSuccessful) {
+                    // Update adapter's dataset
+                    print(response.body())
+                    adapter.setItems(response.body() ?: emptyList())
+                } else {
+                    // Handle the case where the response is not successful
+                    Toast.makeText(context, "Failed to fetch offers", Toast.LENGTH_SHORT).show()
+                }
+            }
+
+            override fun onFailure(call: retrofit2.Call<List<Offer>>, t: Throwable) {
+                // Handle failure, such as a network error
+                Toast.makeText(context, "Network error: ${t.message}", Toast.LENGTH_SHORT).show()
+            }
+        })
     }
 
     private fun setupUI() {
@@ -47,15 +71,13 @@ class OfferListFragment : Fragment() {
             sortRadioGroup.setOnCheckedChangeListener { _, checkedId ->
                 when (checkedId) {
                     R.id.sort_by_price -> {
-                        /**
-                         * implement sorting by price
-                         */
+                        val sortedList = adapter.items.sortedBy { it.price }
+                        adapter.setItems(sortedList)
                     }
 
                     R.id.sort_by_duration -> {
-                        /**
-                         * implement sorting by duration
-                         */
+                        val sortedList = adapter.items.sortedBy { it.flight.duration }
+                        adapter.setItems(sortedList)
                     }
                 }
             }

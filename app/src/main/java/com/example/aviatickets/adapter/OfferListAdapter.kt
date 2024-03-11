@@ -2,6 +2,7 @@ package com.example.aviatickets.adapter
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.example.aviatickets.R
 import com.example.aviatickets.databinding.ItemOfferBinding
@@ -9,12 +10,26 @@ import com.example.aviatickets.model.entity.Offer
 
 class OfferListAdapter : RecyclerView.Adapter<OfferListAdapter.ViewHolder>() {
 
-    private val items: ArrayList<Offer> = arrayListOf()
+    val items: ArrayList<Offer> = arrayListOf()
 
     fun setItems(offerList: List<Offer>) {
+//        items.clear()
+//        items.addAll(offerList)
+//        notifyDataSetChanged()
+
+        val diffCallback = object : DiffUtil.Callback() {
+            override fun getOldListSize(): Int = items.size
+            override fun getNewListSize(): Int = offerList.size
+            override fun areItemsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean =
+                items[oldItemPosition].id == offerList[newItemPosition].id
+
+            override fun areContentsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean =
+                items[oldItemPosition] == offerList[newItemPosition]
+        }
+        val diffResult = DiffUtil.calculateDiff(diffCallback)
         items.clear()
         items.addAll(offerList)
-        notifyDataSetChanged()
+        diffResult.dispatchUpdatesTo(this)
 
         /**
          * think about recycler view optimization using diff.util
